@@ -43,7 +43,7 @@ yay -S gtk-layer-shell   # AUR - only needed for overlay mode
 | `libwebp` | Native thumbnailer only (WebP decode) |
 
 Make sure `awww-daemon` is running before you try to apply anything —
-`awww-daemon &` once, or add `exec-once = awww-daemon` to `hyprland.conf`/
+`awww-daemon &` once, or add `exec-once = awww-daemon` to `hyprland.lua`/
 the Lua equivalent so it starts with your session.
 
 ##Install
@@ -72,7 +72,7 @@ What it does:
 - Copies the app to `~/.local/share/wallpaper-picker`
 - Installs Electron locally if it's not already on your system
 - Installs the `wallpick` command to `~/.local/bin`
-- Creates your wallpaper folder (`~/.config/hypr/wallpaper_animated` by
+- Creates your wallpaper folder (`~/.config/hypr/wallpaper` by
   default) if it doesn't exist yet
 - Builds the overlay shim / native thumbnailer if requested
 
@@ -102,9 +102,6 @@ Add to `hyprland.lua`:
 -- Open the overlay
 hl.bind(mainMod .. "+ up", hl.dsp.exec_cmd("wallpick -o"))
 
--- Cycle without opening the UI (reads/writes the same state file)
-hl.bind(mainMod .. "+ bracketright", hl.dsp.exec_cmd("bash ~/.local/share/wallpaper-picker/scripts/wallpaper-cycle.sh next"))
-hl.bind(mainMod .. "+ bracketleft",  hl.dsp.exec_cmd("bash ~/.local/share/wallpaper-picker/scripts/wallpaper-cycle.sh prev"))
 ```
 
 > **Heads up:** `hl.dsp.exec_cmd` runs in Hyprland's own environment, which
