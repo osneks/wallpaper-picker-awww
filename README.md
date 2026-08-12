@@ -51,9 +51,7 @@ the Lua equivalent so it starts with your session.
 Extract the archive and run the installer:
 
 ```bash
-tar -xzf wallpaper-picker.tar.gz
-cd wallpaper-picker
-./install.sh --all
+git clone && cd wallpaper-picker &&./install.sh --all
 ```
 
 `--all` builds everything: the overlay shim and the native thumbnailer.
