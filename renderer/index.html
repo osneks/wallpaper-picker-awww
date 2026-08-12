@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' file: data:; script-src 'self'; style-src 'self' 'unsafe-inline';" />
+  <title>Wallpaper Picker</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="drop-overlay" class="hidden">
+    <div class="drop-message">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M12 16V4M12 4L7 9M12 4L17 9" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M3 15V19C3 20.1046 3.89543 21 5 21H19C20.1046 21 21 20.1046 21 19V15" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span>Drop wallpapers here to import</span>
+    </div>
+  </div>
+
+  <header>
+    <svg id="logo" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect x="2.5" y="4.5" width="19" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/>
+      <path d="M2.5 15.5L8 10.5C8.7 9.85 9.75 9.85 10.45 10.5L14.5 14.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M12.5 15.5L15.5 12.8C16.2 12.15 17.25 12.15 17.95 12.8L21.5 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="8" cy="8.5" r="1.4" fill="currentColor"/>
+    </svg>
+    <h1>wallpaper<span id="title-dim">-picker</span></h1>
+    <span id="status"></span>
+  </header>
+  <div id="folder-bar">
+    <svg id="folder-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M3 6.5C3 5.67 3.67 5 4.5 5H9.5L11.5 7H19.5C20.33 7 21 7.67 21 8.5V17.5C21 18.33 20.33 19 19.5 19H4.5C3.67 19 3 18.33 3 17.5V6.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+    </svg>
+    <span id="folder-path"></span>
+    <button id="change-folder-btn">change<span id="btn-dim">…</span></button>
+  </div>
+  <div id="filter-bar"></div>
+  <main id="grid"></main>
+  <script src="renderer.js"></script>
+</body>
+</html>

@@ -1,0 +1,522 @@
+:root {
+  --base: rgba(30, 30, 46, 0.75);
+  --surface: rgba(49, 50, 68, 0.85);
+  --surface-hover: rgba(69, 71, 90, 0.95);
+  --text: #cdd6f4;
+  --subtext: #a6adc8;
+  --muted: #6c7086;
+  --accent: #cba6f7;
+  --green: #a6e3a1;
+  --red: #f38ba8;
+  --mono: "JetBrains Mono", "Fira Code", ui-monospace, "Cascadia Code", Consolas, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  /* Scrollbar-hiding rules on `body` alone don't reliably work: per spec,
+     body's overflow behavior propagates up to become the viewport's own
+     scrolling, so it's `html` that ends up owning the actual scrollbar.
+     Hiding it on both covers whichever one the engine picks. */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  overflow-x: hidden;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+body {
+  margin: 0;
+  /* NOTE: the blur is intentionally gone from here. A body-level
+     backdrop-filter forces Chromium to re-blur the ENTIRE window every time
+     anything inside it repaints - and animated GIF/WebP thumbnails repaint
+     constantly. That single property was almost certainly your #1 source of
+     lag. Get the blur from Hyprland's compositor instead (one-time, GPU-side,
+     free), by adding a window rule for this app's class, e.g. in hyprland.conf:
+
+       windowrulev2 = opacity 0.85 override,class:^(wallpaper-picker)$
+       windowrulev2 = blur,class:^(wallpaper-picker)$
+
+     That gives you the same frosted-glass look with zero per-frame CSS cost. */
+  background: var(--base);
+  color: var(--text);
+  font-family: var(--mono);
+  overflow-y: auto;
+}
+
+body::-webkit-scrollbar {
+  display: none;
+}
+
+/* ---------- Drop Overlay Zone ---------- */
+
+#drop-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(30, 30, 46, 0.92);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed var(--accent);
+  margin: 10px;
+  border-radius: 12px;
+}
+
+#drop-overlay.hidden {
+  display: none;
+}
+
+.drop-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.drop-message svg {
+  width: 48px;
+  height: 48px;
+}
+
+/* ---------- Header & Folder Bar ---------- */
+
+header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px;
+  position: sticky;
+  top: 0;
+  background: rgba(30, 30, 46, 0.85);
+  border-bottom: 1px solid rgba(205, 214, 244, 0.08);
+  z-index: 2;
+}
+
+#logo {
+  width: 18px;
+  height: 18px;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+h1 {
+  font-size: 15px;
+  margin: 0;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text);
+}
+
+#title-dim {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+#status {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--accent);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+#status:not(:empty) {
+  opacity: 1;
+}
+
+#folder-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 20px;
+  font-size: 11px;
+  color: var(--subtext);
+  border-bottom: 1px solid rgba(205, 214, 244, 0.06);
+}
+
+#folder-icon {
+  width: 13px;
+  height: 13px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+#folder-path {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  direction: rtl;
+  text-align: left;
+}
+
+#change-folder-btn {
+  flex-shrink: 0;
+  background: transparent;
+  color: var(--subtext);
+  border: 1px solid rgba(205, 214, 244, 0.15);
+  border-radius: 5px;
+  padding: 4px 9px;
+  font-family: var(--mono);
+  font-size: 11px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+#btn-dim {
+  color: var(--muted);
+}
+
+#change-folder-btn:hover {
+  color: var(--text);
+  border-color: var(--accent);
+  background: var(--surface);
+}
+
+/* ---------- Type Filter Bar ---------- */
+
+#filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px 20px;
+  border-bottom: 1px solid rgba(205, 214, 244, 0.06);
+}
+
+#filter-bar.hidden {
+  display: none;
+}
+
+.filter-btn {
+  background: transparent;
+  color: var(--subtext);
+  border: 1px solid rgba(205, 214, 244, 0.15);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.filter-btn:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.filter-btn.active {
+  color: #11111b;
+  background: var(--accent);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+/* ---------- Grid Layout ---------- */
+
+#grid {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+#grid.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.type-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.type-section.hidden,
+.card.hidden {
+  display: none;
+}
+
+.section-title {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-title::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgba(205, 214, 244, 0.08);
+}
+
+.section-count {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.section-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 14px;
+}
+
+.card {
+  position: relative;
+  background: var(--surface);
+  border-radius: 10px;
+  overflow: visible;
+  cursor: pointer;
+  border: 1.5px solid transparent;
+  /* This is the big one: content-visibility: auto tells Chromium to skip
+     layout/paint AND freeze animated image decoding for any card that is
+     scrolled out of the viewport. With hundreds of GIF/WebP cards in the
+     grid, this alone turns "everything animates all the time" into "only
+     what's visible animates" - a free virtual-list without writing one. */
+  content-visibility: auto;
+  contain-intrinsic-size: 190px 168px;
+  contain: layout style paint;
+  /* Promote the card to its own GPU compositor layer so hover transforms
+     don't force a repaint of neighboring cards. */
+  will-change: transform;
+  transform: translateZ(0);
+  transition: border-color 0.15s ease, transform 0.15s ease, background 0.15s ease;
+}
+
+.card:hover {
+  transform: translateY(-3px) translateZ(0);
+  background: var(--surface-hover);
+}
+
+/* box-shadow was animating alongside transform on hover, which is a paint
+   cost (not a compositor-only cost like transform/opacity). Same visual via
+   a pseudo-element whose opacity we fade in instead - opacity is composited
+   for free on the GPU. */
+.card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.card:hover::after {
+  opacity: 1;
+}
+
+.card .thumb {
+  position: relative;
+  overflow: hidden;
+  height: 128px;
+  background: #11111b;
+  border-radius: 8px 8px 0 0;
+}
+
+.card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transform: translateZ(0);
+  transition: transform 0.3s ease;
+}
+
+.card:hover img {
+  transform: scale(1.06) translateZ(0);
+}
+
+/* ---------- Format-Specific Type Badges ---------- */
+
+.card .label-container {
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+}
+
+.type-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.type-jpg, .type-jpeg {
+  color: #fab387;
+  background: rgba(250, 179, 135, 0.15);
+  border: 1px solid rgba(250, 179, 135, 0.3);
+}
+
+.type-png {
+  color: #89b4fa;
+  background: rgba(137, 180, 250, 0.15);
+  border: 1px solid rgba(137, 180, 250, 0.3);
+}
+
+.type-webp {
+  color: #89dceb;
+  background: rgba(137, 220, 235, 0.15);
+  border: 1px solid rgba(137, 220, 235, 0.3);
+}
+
+.type-gif {
+  color: #a6e3a1;
+  background: rgba(166, 227, 161, 0.15);
+  border: 1px solid rgba(166, 227, 161, 0.3);
+}
+
+/* ---------- Three Dots & Dropdown ---------- */
+
+.menu-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  background: rgba(30, 30, 46, 0.7);
+  color: var(--text);
+  border: 1px solid rgba(205, 214, 244, 0.15);
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease, background 0.15s ease;
+  z-index: 5;
+}
+
+.card:hover .menu-btn {
+  opacity: 1;
+}
+
+.menu-btn:hover {
+  background: var(--accent);
+  color: #11111b;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 36px;
+  right: 6px;
+  background: #1e1e2e;
+  border: 1px solid rgba(205, 214, 244, 0.12);
+  border-radius: 8px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  z-index: 10;
+  min-width: 150px;
+}
+
+.dropdown-menu.hidden {
+  display: none;
+}
+
+.dropdown-item {
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 6px 10px;
+  text-align: left;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.dropdown-item:hover {
+  background: var(--surface-hover);
+}
+
+.dropdown-item.danger {
+  color: var(--red);
+}
+
+.dropdown-item.danger:hover {
+  background: rgba(243, 139, 168, 0.15);
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: rgba(205, 214, 244, 0.08);
+  margin: 2px 0;
+}
+
+/* ---------- Card Selection & Key Focus ---------- */
+
+.card.selected {
+  border-color: rgba(166, 227, 161, 0.5);
+}
+
+.card.selected .thumb::after {
+  content: "";
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--green);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M3.5 8.5L6.5 11.5L12.5 4.5' stroke='%231e1e2e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.card.focused .thumb::before {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  pointer-events: none;
+  background-image:
+    linear-gradient(var(--accent), var(--accent)), linear-gradient(var(--accent), var(--accent)),
+    linear-gradient(var(--accent), var(--accent)), linear-gradient(var(--accent), var(--accent)),
+    linear-gradient(var(--accent), var(--accent)), linear-gradient(var(--accent), var(--accent)),
+    linear-gradient(var(--accent), var(--accent)), linear-gradient(var(--accent), var(--accent));
+  background-repeat: no-repeat;
+  background-size: 2px 12px, 12px 2px, 2px 12px, 12px 2px, 2px 12px, 12px 2px, 2px 12px, 12px 2px;
+  background-position:
+    top left, top left,
+    top right, top right,
+    bottom left, bottom left,
+    bottom right, bottom right;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .card img,
+  #change-folder-btn,
+  #status {
+    transition: none;
+  }
+}

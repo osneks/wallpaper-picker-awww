@@ -1,0 +1,10 @@
+{
+  "name": "wallpaper-picker",
+  "version": "1.0.0",
+  "description": "Electron UI for picking a Hyprland wallpaper, applied via a separate bash script (swww)",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron ."
+  }
+}
