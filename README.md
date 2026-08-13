@@ -23,11 +23,7 @@ wallpaper picker is a simple vibe coded wallpaper picker overly made with [awww]
 
 ## Installation
 
-An Electron wallpaper picker for Hyprland, with an optional rofi-style
-layer-shell overlay mode and a native C++ thumbnail generator for low CPU
-usage. Built for Arch + Hyprland + `awww`.
-
-## Prerequisites
+## 1. Prerequisites
 
 ```bash
 sudo pacman -S nodejs npm awww base-devel gtk3 libwebp
@@ -43,10 +39,10 @@ yay -S gtk-layer-shell   # AUR - only needed for overlay mode
 | `libwebp` | Native thumbnailer only (WebP decode) |
 
 Make sure `awww-daemon` is running before you try to apply anything —
-`awww-daemon &` once, or add `exec-once = awww-daemon` to `hyprland.lua`/
+`awww-daemon &` once, or add `exec-once = awww-daemon` to `hyprland.conf`/
 the Lua equivalent so it starts with your session.
 
-# Install
+## 2. Install
 
 Extract the archive and run the installer:
 
@@ -54,61 +50,58 @@ Extract the archive and run the installer:
 git clone https://github.com/osneks/wallpaper-picker-awww.git && cd wallpaper-picker &&./install.sh --all
 ```
 
-`--all` builds everything: the overlay shim and the native thumbnailer.
-If you only want the base app, run `./install.sh` with no flags — you can
-always come back and run `./install.sh --all` again later, it's safe to
-re-run.
-
-Individual flags, if you want to be selective:
+This is an overlay-only app (rofi/wofi-style), so the overlay shim is
+always built as part of a normal install — there's no separate flag for
+it anymore. The only optional piece is the native thumbnail generator:
 
 ```bash
-./install.sh                 # app only
-./install.sh --with-overlay  # + rofi-style layer-shell overlay
-./install.sh --with-native   # + native C++ thumbnail generator
-./install.sh --all           # everything
+./install.sh --with-native
 ```
 
 What it does:
 - Copies the app to `~/.local/share/wallpaper-picker`
 - Installs Electron locally if it's not already on your system
 - Installs the `wallpick` command to `~/.local/bin`
-- Creates your wallpaper folder (`~/.config/hypr/wallpaper` by
+- Creates your wallpaper folder (`~/.config/hypr/wallpaper_animated` by
   default) if it doesn't exist yet
-- Builds the overlay shim / native thumbnailer if requested
+- Builds the overlay shim (and the native thumbnailer if `--with-native`
+  was passed)
 
 If `~/.local/bin` isn't on your `PATH`, the installer tells you and prints
 the line to add to your shell rc.
 
-## Usage
+## 3. Using it
 
 ```bash
-wallpick                             # normal window, current default folder
-wallpick ~/Pictures/wallpapers       # normal window, this folder only this run
-wallpick -o                          # rofi-style overlay
-wallpick -o ~/Pictures/wallpapers    # overlay, this folder only this run
+wallpick                             # open the overlay, current default folder
+wallpick ~/Pictures/wallpapers       # this folder, only for this run
 wallpick set-dir ~/Pictures/wallpapers   # persist a folder as the default
 ```
 
-Inside the app: Enter/Space to apply the focused wallpaper, click a card to apply it directly, or use its ⋮ menu
+Inside the app: arrow keys to move around the grid, Enter/Space to apply
+the focused wallpaper, click a card to apply it directly, or use its ⋮ menu
 to show-in-file-manager / copy path / delete. Type filter chips (All / PNG
 / JPG / WEBP / GIF) sit above the grid. Drag and drop image files onto the
 window to import them into the current folder.
 
-## Wiring up Hyprland
+## 4. Wiring up Hyprland
 
 Add to `hyprland.lua`:
 
 ```lua
 -- Open the overlay
-hl.bind(mainMod .. "+ up", hl.dsp.exec_cmd("wallpick -o"))
+hl.bind(mainMod .. "+ up", hl.dsp.exec_cmd("wallpick"))
 
+-- Cycle without opening the UI (reads/writes the same state file)
+hl.bind(mainMod .. "+ bracketright", hl.dsp.exec_cmd("bash ~/.local/share/wallpaper-picker/scripts/wallpaper-cycle.sh next"))
+hl.bind(mainMod .. "+ bracketleft",  hl.dsp.exec_cmd("bash ~/.local/share/wallpaper-picker/scripts/wallpaper-cycle.sh prev"))
 ```
 
 > **Heads up:** `hl.dsp.exec_cmd` runs in Hyprland's own environment, which
-> doesn't always inherit your shell's `PATH`. If the `wallpick -o` bind does
-> nothing, swap in the absolute path: `hl.dsp.exec_cmd("~/.local/bin/wallpick -o")`.
+> doesn't always inherit your shell's `PATH`. If the `wallpick` bind does
+> nothing, swap in the absolute path: `hl.dsp.exec_cmd("~/.local/bin/wallpick")`.
 
-## Troubleshooting
+## 5. Troubleshooting
 
 **Nothing happens when I apply a wallpaper.**
 Check `awww-daemon` is actually running: `pgrep -a awww-daemon`. If it's
@@ -120,6 +113,11 @@ The scripts auto-clear `awww`'s cache if a single apply takes ≥3 seconds
 should self-correct on the next one. If every apply is consistently slow,
 build the native thumbnailer (`./install.sh --with-native`) — full-size
 image decoding on every render is the usual cause.
+
+**Set-dir on an old build (no such command)?**
+Older versions had separate `wallpick -o` overlay mode and a plain windowed
+mode. The app is now overlay-only, and `set-dir` ships by default — just
+re-run `./install.sh` from this archive.
 
 **Overlay keybind does nothing.**
 1. Confirm the shim built: `ls overlay/liblayer-shell-shim.so` inside the
@@ -155,7 +153,7 @@ cat ~/.config/wallpaper-picker/config.json
 Set it explicitly with `wallpick set-dir <folder>`, or override for a
 single run with `wallpick <folder>` / `wallpick -o <folder>`.
 
-## Uninstalling
+## 6. Uninstalling
 
 ```bash
 rm -rf ~/.local/share/wallpaper-picker
@@ -165,7 +163,7 @@ rm -rf ~/.config/wallpaper-picker
 (Your actual wallpaper image files are untouched — this only removes the
 app itself.)
 
-## Project layout (for reference)
+## 7. Project layout (for reference)
 
 ```
 wallpaper-picker/
@@ -185,7 +183,3 @@ wallpaper-picker/
     ├── thumbgen.cpp
     └── build.sh
 ```
-
-
-
-
