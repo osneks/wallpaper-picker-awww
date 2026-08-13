@@ -47,8 +47,16 @@ fi
 
 echo "==> Installing app to $INSTALL_DIR"
 mkdir -p "$INSTALL_DIR"
-# Copy everything except this installer and any previous build artifact.
-rsync -a --exclude 'install.sh' --exclude '*.so' --exclude 'node_modules' ./ "$INSTALL_DIR/"
+if command -v rsync >/dev/null 2>&1; then
+  rsync -a --exclude 'install.sh' --exclude '*.so' --exclude 'node_modules' ./ "$INSTALL_DIR/"
+else
+  # rsync isn't guaranteed to be installed. Plain cp -a covers the same
+  # ground here: the source tarball never actually contains node_modules or
+  # a built .so to begin with - those only ever get created inside
+  # $INSTALL_DIR itself, later, by npm install / build-shim.sh.
+  cp -a . "$INSTALL_DIR/"
+  rm -f "$INSTALL_DIR/install.sh"
+fi
 
 echo "==> Installing npm dependencies (Electron)"
 cd "$INSTALL_DIR"
@@ -157,10 +165,3 @@ echo "==> Done."
 echo "Run normally with:      wallpick"
 echo "Run as overlay with:    wallpick -o"
 echo "With a specific folder: wallpick -o ~/Pictures/wallpapers"
-echo ""
-echo "Add to hyprland.lua:"
-echo "  hl.bind(mainMod .. \"+ up\", hl.dsp.exec_cmd(\"wallpick -o\"))"
-echo ""
-echo "Cycle keybinds (add to hyprland.lua):"
-echo "  hl.bind(mainMod .. \"+ bracketright\", hl.dsp.exec_cmd(\"bash $INSTALL_DIR/scripts/wallpaper-cycle.sh next\"))"
-echo "  hl.bind(mainMod .. \"+ bracketleft\",  hl.dsp.exec_cmd(\"bash $INSTALL_DIR/scripts/wallpaper-cycle.sh prev\"))"
