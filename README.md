@@ -46,7 +46,7 @@ Make sure `awww-daemon` is running before you try to apply anything —
 `awww-daemon &` once, or add `exec-once = awww-daemon` to `hyprland.lua`/
 the Lua equivalent so it starts with your session.
 
-##Install
+# Install
 
 Extract the archive and run the installer:
 
