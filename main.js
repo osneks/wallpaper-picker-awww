@@ -4,26 +4,9 @@ const fs = require('fs/promises');
 const { existsSync, readFileSync } = require('fs');
 const { execFile } = require('child_process');
 
-// --- Hyprland / Wayland GPU tuning -----------------------------------------
-// These native-Wayland Ozone switches give the best performance for a normal
-// window, but they are INCOMPATIBLE with the layer-shell overlay setup in
-// overlay/ - that relies on Electron creating real GtkWindow objects via
-// the GTK/XWayland backend, which only happens when Ozone/Wayland is off.
-// overlay/run-overlay.sh sets LAYER_SHELL_OVERLAY=1 to opt out of these.
-const isOverlayMode = !!process.env.LAYER_SHELL_OVERLAY;
-
-if (!isOverlayMode) {
-  app.commandLine.appendSwitch('ozone-platform', 'wayland');
-  app.commandLine.appendSwitch('enable-features', 'UseOzonePlatform,WaylandWindowDecorations');
-  app.commandLine.appendSwitch('enable-transparent-visuals');
-  app.commandLine.appendSwitch('enable-zero-copy');
-  app.commandLine.appendSwitch('enable-gpu-rasterization');
-  app.commandLine.appendSwitch('ignore-gpu-blocklist');
-  app.commandLine.appendSwitch('disable-gpu-vsync');
-  if (!process.env.WAYLAND_DISPLAY) {
-    app.commandLine.appendSwitch('ozone-platform-hint', 'auto');
-  }
-}
+// This app is overlay-only: it always runs as a wlr-layer-shell surface
+// via the shim in overlay/, which requires Electron's GTK/XWayland window
+// path rather than native Ozone/Wayland - so no Ozone GPU switches here.
 
 const DEFAULT_WALLPAPER_DIR =
   process.env.WALLPAPER_DIR || path.join(process.env.HOME, '.config/hypr/wallpaper_animated');
@@ -153,21 +136,15 @@ if (!gotLock) {
 } else {
   app.on('second-instance', () => {
     if (!mainWindow) return;
-    if (isOverlayMode) {
-      // Toggle behavior, matching rofi/wofi: press again while it's open
-      // to close it, press while hidden to reopen it - either way, reuses
-      // the one existing window instead of creating another process.
-      if (mainWindow.isVisible()) {
-        mainWindow.hide();
-      } else {
-        mainWindow.show();
-        mainWindow.focus();
-        mainWindow.webContents.focus();
-      }
+    // Toggle behavior, matching rofi/wofi: press again while it's open
+    // to close it, press while hidden to reopen it - either way, reuses
+    // the one existing window instead of creating another process.
+    if (mainWindow.isVisible()) {
+      mainWindow.hide();
     } else {
-      if (mainWindow.isMinimized()) mainWindow.restore();
       mainWindow.show();
       mainWindow.focus();
+      mainWindow.webContents.focus();
     }
   });
 
@@ -188,13 +165,13 @@ function createWindow() {
     height: 700,
     transparent: true,
     backgroundColor: '#00000000',
-    frame: !isOverlayMode,
-    resizable: !isOverlayMode,
-    // skipTaskbar/alwaysOnTop only matter in normal (non layer-shell) mode -
-    // once the shim promotes the window to a layer surface, Hyprland/wlroots
-    // handle stacking and it's never in the taskbar to begin with.
-    skipTaskbar: isOverlayMode,
-    alwaysOnTop: isOverlayMode,
+    frame: false,
+    resizable: false,
+    // Both are somewhat moot once the overlay/ shim promotes this to a
+    // real layer-shell surface (Hyprland/wlroots own its stacking and it's
+    // never in a taskbar to begin with), but harmless to set regardless.
+    skipTaskbar: true,
+    alwaysOnTop: true,
     hasShadow: false,
     show: false,
     webPreferences: {
@@ -220,16 +197,15 @@ function createWindow() {
     mainWindow.webContents.focus();
   });
 
-  if (isOverlayMode) {
-    // Rofi/wofi-style dismiss behavior: closing on blur or Escape instead
-    // of leaving a stray window sitting on top of everything.
-    mainWindow.on('blur', () => mainWindow.hide());
-    mainWindow.webContents.on('before-input-event', (_event, input) => {
-      if (input.type === 'keyDown' && input.key === 'Escape') {
-        mainWindow.hide();
-      }
-    });
-  }
+  // Rofi/wofi-style dismiss behavior: close on blur or Escape instead of
+  // leaving a stray window sitting on top of everything.
+  mainWindow.on('blur', () => mainWindow.hide());
+  mainWindow.webContents.on('before-input-event', (_event, input) => {
+    if (input.type === 'keyDown' && input.key === 'Escape') {
+      mainWindow.hide();
+    }
+  });
+
   mainWindow.setMenuBarVisibility(false);
   mainWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'));
 }

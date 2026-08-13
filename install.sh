@@ -1,19 +1,20 @@
 #!/usr/bin/env bash
 # install.sh - sets up wallpaper-picker on Arch/Hyprland.
 #
+# This app is overlay-only (rofi/wofi-style layer-shell surface), so the
+# overlay shim is always built - there's no "windowed mode" anymore.
+#
 # Usage:
-#   ./install.sh                 install app only
-#   ./install.sh --with-overlay  also build the layer-shell overlay shim
+#   ./install.sh                install app + overlay
+#   ./install.sh --with-native  also build the native C++ thumbnail generator
 set -euo pipefail
 cd "$(dirname "$0")"
 
 INSTALL_DIR="${WALLPAPER_PICKER_DIR:-$HOME/.local/share/wallpaper-picker}"
 BIN_DIR="$HOME/.local/bin"
-WITH_OVERLAY=0
 WITH_NATIVE=0
 for arg in "$@"; do
-  [[ "$arg" == "--with-overlay" || "$arg" == "--all" ]] && WITH_OVERLAY=1
-  [[ "$arg" == "--with-native"  || "$arg" == "--all" ]] && WITH_NATIVE=1
+  [[ "$arg" == "--with-native" ]] && WITH_NATIVE=1
 done
 
 echo "==> Checking dependencies"
@@ -23,11 +24,9 @@ command -v npm     >/dev/null 2>&1 || missing+=("npm")
 command -v awww    >/dev/null 2>&1 || missing+=("awww")
 command -v electron >/dev/null 2>&1 || echo "    (electron not found globally - will use a local npm install instead, that's fine)"
 
-if [[ $WITH_OVERLAY -eq 1 ]]; then
-  command -v gcc      >/dev/null 2>&1 || missing+=("base-devel")
-  pkg-config --exists gtk+-3.0        2>/dev/null || missing+=("gtk3")
-  pkg-config --exists gtk-layer-shell-0 2>/dev/null || missing+=("gtk-layer-shell (AUR)")
-fi
+command -v gcc      >/dev/null 2>&1 || missing+=("base-devel")
+pkg-config --exists gtk+-3.0        2>/dev/null || missing+=("gtk3")
+pkg-config --exists gtk-layer-shell-0 2>/dev/null || missing+=("gtk-layer-shell (AUR)")
 
 if [[ $WITH_NATIVE -eq 1 ]]; then
   command -v g++ >/dev/null 2>&1 || missing+=("base-devel")
@@ -39,7 +38,7 @@ if [[ ${#missing[@]} -gt 0 ]]; then
   echo "Missing packages: ${missing[*]}"
   echo "On Arch, roughly:"
   echo "  sudo pacman -S nodejs npm awww base-devel gtk3"
-  echo "  yay -S gtk-layer-shell   # only needed for --with-overlay"
+  echo "  yay -S gtk-layer-shell"
   echo ""
   read -rp "Continue anyway? [y/N] " reply
   [[ "$reply" =~ ^[Yy]$ ]] || exit 1
@@ -64,18 +63,20 @@ if ! command -v electron >/dev/null 2>&1; then
   npm install --no-save electron
 fi
 
+echo "==> Building layer-shell overlay shim"
+"$INSTALL_DIR/overlay/build-shim.sh"
+chmod +x "$INSTALL_DIR/overlay/run-overlay.sh"
+
 echo "==> Creating launcher at $BIN_DIR/wallpick"
 mkdir -p "$BIN_DIR"
 cat > "$BIN_DIR/wallpick" <<EOF
 #!/usr/bin/env bash
-# wallpick - launch the wallpaper picker
+# wallpick - launch the wallpaper picker overlay
 #
 # Usage:
-#   wallpick                     normal window, last-configured folder
-#   wallpick <dir>                normal window, use <dir> for this run only
-#   wallpick -o|--overlay         overlay mode, last-configured folder
-#   wallpick -o|--overlay <dir>   overlay mode, use <dir> for this run only
-#   wallpick set-dir <dir>        persist <dir> as the default folder
+#   wallpick                use the last-configured folder
+#   wallpick <dir>           use <dir> for this run only
+#   wallpick set-dir <dir>   persist <dir> as the default folder
 set -euo pipefail
 
 # Mirrors Electron's app.getPath('userData') resolution for this app
@@ -107,35 +108,17 @@ if [[ "\${1:-}" == "set-dir" ]]; then
   exit 0
 fi
 
-overlay=0
-dir=""
-
-for arg in "\$@"; do
-  case "\$arg" in
-    -o|--overlay) overlay=1 ;;
-    -h|--help)
-      echo "Usage: wallpick [-o|--overlay] [wallpaper-dir]"
-      echo "       wallpick set-dir <folder>"
-      exit 0
-      ;;
-    *) dir="\$arg" ;;
-  esac
-done
-
-if [[ -n "\$dir" ]]; then
-  export WALLPAPER_DIR="\$(realpath "\$dir")"
+if [[ "\${1:-}" == "-h" || "\${1:-}" == "--help" ]]; then
+  echo "Usage: wallpick [wallpaper-dir]"
+  echo "       wallpick set-dir <folder>"
+  exit 0
 fi
 
-if [[ "\$overlay" -eq 1 ]]; then
-  exec bash "$INSTALL_DIR/overlay/run-overlay.sh"
-else
-  cd "$INSTALL_DIR"
-  if [[ -x node_modules/.bin/electron ]]; then
-    exec node_modules/.bin/electron .
-  else
-    exec electron .
-  fi
+if [[ -n "\${1:-}" ]]; then
+  export WALLPAPER_DIR="\$(realpath "\$1")"
 fi
+
+exec bash "$INSTALL_DIR/overlay/run-overlay.sh"
 EOF
 chmod +x "$BIN_DIR/wallpick"
 
@@ -148,12 +131,6 @@ DEFAULT_WP_DIR="$HOME/.config/hypr/wallpaper_animated"
 mkdir -p "$DEFAULT_WP_DIR"
 echo "==> Wallpaper folder: $DEFAULT_WP_DIR (override with \$WALLPAPER_DIR)"
 
-if [[ $WITH_OVERLAY -eq 1 ]]; then
-  echo "==> Building layer-shell overlay shim"
-  "$INSTALL_DIR/overlay/build-shim.sh"
-  chmod +x "$INSTALL_DIR/overlay/run-overlay.sh"
-fi
-
 if [[ $WITH_NATIVE -eq 1 ]]; then
   echo "==> Building native thumbnail generator"
   "$INSTALL_DIR/native/build.sh"
@@ -162,6 +139,5 @@ fi
 
 echo ""
 echo "==> Done."
-echo "Run normally with:      wallpick"
-echo "Run as overlay with:    wallpick -o"
-echo "With a specific folder: wallpick -o ~/Pictures/wallpapers"
+echo "Run with:                wallpick"
+echo "With a specific folder:  wallpick ~/Pictures/wallpapers"
