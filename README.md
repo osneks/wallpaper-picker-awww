@@ -70,7 +70,7 @@ What it does:
 If `~/.local/bin` isn't on your `PATH`, the installer tells you and prints
 the line to add to your shell rc.
 
-## 3. Using it
+## 3. Usage
 
 ```bash
 wallpick                             # open the overlay, current default folder
