@@ -46,16 +46,15 @@ fi
 
 echo "==> Installing app to $INSTALL_DIR"
 mkdir -p "$INSTALL_DIR"
-if command -v rsync >/dev/null 2>&1; then
-  rsync -a --exclude 'install.sh' --exclude '*.so' --exclude 'node_modules' ./ "$INSTALL_DIR/"
-else
-  # rsync isn't guaranteed to be installed. Plain cp -a covers the same
-  # ground here: the source tarball never actually contains node_modules or
-  # a built .so to begin with - those only ever get created inside
-  # $INSTALL_DIR itself, later, by npm install / build-shim.sh.
-  cp -a . "$INSTALL_DIR/"
-  rm -f "$INSTALL_DIR/install.sh"
-fi
+# tar (not cp/rsync) so we can reliably exclude .git, node_modules, etc.
+# regardless of what's installed. This also sidesteps git's read-only
+# object files, which made a plain `cp -a` fail on re-installs.
+tar -c \
+  --exclude='./.git' \
+  --exclude='./install.sh' \
+  --exclude='*.so' \
+  --exclude='./node_modules' \
+  . | tar -x -C "$INSTALL_DIR"
 
 echo "==> Installing npm dependencies (Electron)"
 cd "$INSTALL_DIR"
