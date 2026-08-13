@@ -5,10 +5,10 @@ wallpaper picker is a simple vibe coded wallpaper picker overly made with [awww]
 # Table of Contents
 - [Features](#features)
 - [Installation](#installation)
-- [Usage](#usage)
-- [Wiring up Hyprland](# "Wiring up Hyprland")
-- [Troubleshooting](#Troubleshooting)
-- [Uninstalling](#Uninstalling)
+- [Usage](# "3. usage")
+- [Wiring up Hyprland](# "4. Wiring up Hyprland")
+- [Troubleshooting](# "Troubleshooting")
+- [Uninstalling](# "Uninstalling")
 - [Project layout](# "Project layout")
 
 ## Features
@@ -101,7 +101,7 @@ hl.bind(mainMod .. "+ bracketleft",  hl.dsp.exec_cmd("bash ~/.local/share/wallpa
 > doesn't always inherit your shell's `PATH`. If the `wallpick` bind does
 > nothing, swap in the absolute path: `hl.dsp.exec_cmd("~/.local/bin/wallpick")`.
 
-## 5. Troubleshooting
+## Troubleshooting
 
 **Nothing happens when I apply a wallpaper.**
 Check `awww-daemon` is actually running: `pgrep -a awww-daemon`. If it's
@@ -153,7 +153,7 @@ cat ~/.config/wallpaper-picker/config.json
 Set it explicitly with `wallpick set-dir <folder>`, or override for a
 single run with `wallpick <folder>` / `wallpick -o <folder>`.
 
-## 6. Uninstalling
+## Uninstalling
 
 ```bash
 rm -rf ~/.local/share/wallpaper-picker
