@@ -5,11 +5,11 @@ wallpaper picker is a simple vibe coded wallpaper picker overly made with [awww]
 # Table of Contents
 - [Features](#features)
 - [Installation](#installation)
-- [Usage](# "3. usage")
-- [Wiring up Hyprland](# '4. Wiring up Hyprland')
+- [Usage](#usage)
+- [Wiring up Hyprland](#Wiring-up-Hyprland)
 - [Troubleshooting](#Troubleshooting)
 - [Uninstalling](#Uninstalling)
-- [Project layout](# 'Project layout')
+- [Project layout](#Project-layout-(for-reference))
 
 ## Features
 -True wlr-layer-shell surface (like rofi/wofi) — renders above everything, including fullscreen apps/games, not just normal windows. Achieved via an LD_PRELOAD shim (liblayer-shell-shim.c) that hooks Electron's first
@@ -23,7 +23,7 @@ wallpaper picker is a simple vibe coded wallpaper picker overly made with [awww]
 
 ## Installation
 
-## 1. Prerequisites
+## Prerequisites
 
 ```bash
 sudo pacman -S nodejs npm awww base-devel gtk3 libwebp
@@ -42,7 +42,7 @@ Make sure `awww-daemon` is running before you try to apply anything —
 `awww-daemon &` once, or add `exec-once = awww-daemon` to `hyprland.conf`/
 the Lua equivalent so it starts with your session.
 
-## 2. Install
+## Install
 
 Extract the archive and run the installer:
 
@@ -70,7 +70,7 @@ What it does:
 If `~/.local/bin` isn't on your `PATH`, the installer tells you and prints
 the line to add to your shell rc.
 
-## 3. Usage
+## Usage
 
 ```bash
 wallpick                             # open the overlay, current default folder
@@ -84,7 +84,7 @@ to show-in-file-manager / copy path / delete. Type filter chips (All / PNG
 / JPG / WEBP / GIF) sit above the grid. Drag and drop image files onto the
 window to import them into the current folder.
 
-## 4. Wiring up Hyprland
+## Wiring-up-Hyprland
 
 Add to `hyprland.lua`:
 
@@ -163,7 +163,7 @@ rm -rf ~/.config/wallpaper-picker
 (Your actual wallpaper image files are untouched — this only removes the
 app itself.)
 
-## 7. Project layout (for reference)
+## Project-layout-(for-reference)
 
 ```
 wallpaper-picker/
