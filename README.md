@@ -9,7 +9,7 @@ wallpaper picker is a simple vibe coded wallpaper picker overly made with [awww]
 - [Wiring up Hyprland](#Wiring-up-Hyprland)
 - [Troubleshooting](#Troubleshooting)
 - [Uninstalling](#Uninstalling)
-- [Project layout](#Project-layout-(for-reference))
+- [Project layout](#Project-layout)
 
 ## Features
 -True wlr-layer-shell surface (like rofi/wofi) — renders above everything, including fullscreen apps/games, not just normal windows. Achieved via an LD_PRELOAD shim (liblayer-shell-shim.c) that hooks Electron's first
@@ -163,7 +163,7 @@ rm -rf ~/.config/wallpaper-picker
 (Your actual wallpaper image files are untouched — this only removes the
 app itself.)
 
-## Project-layout-(for-reference)
+## Project-layout
 
 ```
 wallpaper-picker/
