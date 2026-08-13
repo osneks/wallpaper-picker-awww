@@ -126,6 +126,28 @@ if ! echo "$PATH" | tr ':' '\n' | grep -qx "$BIN_DIR"; then
   echo "      export PATH=\"\$HOME/.local/bin:\$PATH\""
 fi
 
+# Hyprland's own exec environment (used by exec_cmd/exec-once) often does
+# NOT include ~/.local/bin, even when your interactive shell's PATH does -
+# your shell's PATH gets built up by .bashrc/.zshrc at login, which runs
+# after Hyprland itself already started. /usr/local/bin, by contrast, is
+# part of the bare system PATH Hyprland inherits regardless, so a symlink
+# there makes keybinds like `exec_cmd("wallpick")` reliable without needing
+# an absolute path.
+# Hyprland's own exec environment (used by exec_cmd/exec-once) often does
+# NOT include ~/.local/bin, even when your interactive shell's PATH does -
+# your shell's PATH gets built up by .bashrc/.zshrc at login, which runs
+# after Hyprland itself already started. /usr/local/bin, by contrast, is
+# part of the bare system PATH Hyprland inherits regardless, so a symlink
+# there makes keybinds like `exec_cmd("wallpick")` reliable without needing
+# an absolute path.
+echo "==> Symlinking wallpick into /usr/local/bin (for Hyprland keybinds)"
+if sudo ln -sf "$BIN_DIR/wallpick" /usr/local/bin/wallpick 2>/dev/null; then
+  echo "    Linked: /usr/local/bin/wallpick -> $BIN_DIR/wallpick"
+else
+  echo "    Couldn't create the symlink (no sudo access?). Use the full path"
+  echo "    in your keybind instead: $BIN_DIR/wallpick"
+fi
+
 DEFAULT_WP_DIR="$HOME/.config/hypr/wallpaper_animated"
 mkdir -p "$DEFAULT_WP_DIR"
 echo "==> Wallpaper folder: $DEFAULT_WP_DIR (override with \$WALLPAPER_DIR)"
